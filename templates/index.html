@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduForecast - AI-Based Academic Prediction Tool</title>
+    <meta name="description" content="EduForecast is an AI-ML based academic prediction system designed to analyze student performance and identify students at risk.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>EduForecast</h1>
+                    <span>AI Prediction Tool</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-target="dashboard">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-target="predictor">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Student Predictor</span>
+                </a>
+                <a href="#" class="nav-item" data-target="directory">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Student Directory</span>
+                </a>
+                <a href="#" class="nav-item" data-target="insights">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span>AI Insights</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="model-status">
+                    <div class="status-indicator online"></div>
+                    <div class="status-text">
+                        <p>AI Engine Active</p>
+                        <span>Random Forest Regressor</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">
+                    <h2 id="page-title">Academic Dashboard</h2>
+                    <p id="page-subtitle">Overview of student performance metrics and AI predictions</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-retrain">
+                        <i class="fa-solid fa-arrows-rotate"></i> Retrain AI Model
+                    </button>
+                    <div class="user-profile clickable" id="header-user-profile" title="Click to edit profile">
+                        <div class="user-avatar" id="header-profile-avatar">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name" id="header-profile-name">Dr. Devarsh</span>
+                            <span class="user-role" id="header-profile-role">Academic Director</span>
+                        </div>
+                        <i class="fa-solid fa-pen profile-edit-icon"></i>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Tab Panels -->
+            <div class="tab-content">
+                
+                <!-- 1. Dashboard Tab -->
+                <div id="dashboard" class="tab-panel active">
+                    <!-- Metric Cards Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon blue">
+                                <i class="fa-solid fa-users-viewfinder"></i>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Total Students Analyzed</span>
+                                <h3 class="metric-value" id="metric-total-students">-</h3>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon purple">
+                                <i class="fa-solid fa-square-root-variable"></i>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Avg Math Score</span>
+                                <h3 class="metric-value" id="metric-avg-math">-</h3>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon pink">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Avg Reading Score</span>
+                                <h3 class="metric-value" id="metric-avg-reading">-</h3>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon green">
+                                <i class="fa-solid fa-pen-nib"></i>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Avg Writing Score</span>
+                                <h3 class="metric-value" id="metric-avg-writing">-</h3>
+                            </div>
+                        </div>
+                        <div class="metric-card at-risk">
+                            <div class="metric-icon red">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Students At Risk</span>
+                                <h3 class="metric-value" id="metric-at-risk">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Grid -->
+                    <div class="charts-grid">
+                        <!-- Chart 1: Performance by Demographics -->
+                        <div class="chart-card large">
+                            <div class="chart-header">
+                                <h4>Academic Performance by Demographics</h4>
+                                <div class="chart-controls">
+                                    <button class="btn btn-sm btn-pill active" data-demo="parental">Parental Education</button>
+                                    <button class="btn btn-sm btn-pill" data-demo="gender">Gender</button>
+                                    <button class="btn btn-sm btn-pill" data-demo="testprep">Test Prep Course</button>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="demoChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 2: Attendance vs Performance -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4>Attendance vs Academic Performance</h4>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="attendanceChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 3: Study Hours vs Performance -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h4>Study Hours vs Academic Performance</h4>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="studyChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 4: Risk by Engagement -->
+                        <div class="chart-card large">
+                            <div class="chart-header">
+                                <h4>Risk Distribution by Student Engagement</h4>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="engagementRiskChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 2. Student Predictor Tab -->
+                <div id="predictor" class="tab-panel">
+                    <div class="predictor-layout">
+                        <!-- Input Form Card -->
+                        <div class="glass-card form-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-sliders"></i> Student Profile Parameters</h3>
+                                <p>Provide details to forecast student performance and risk level.</p>
+                            </div>
+                            <form id="prediction-form" class="prediction-form">
+                                <div class="form-grid">
+                                    <!-- Demographic Section -->
+                                    <div class="form-group">
+                                        <label for="gender">Gender</label>
+                                        <select id="gender" required>
+                                            <option value="" disabled selected>Select Gender</option>
+                                            <option value="female">Female</option>
+                                            <option value="male">Male</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="race">Race/Ethnicity Group</label>
+                                        <select id="race" required>
+                                            <option value="" disabled selected>Select Group</option>
+                                            <option value="group A">Group A</option>
+                                            <option value="group B">Group B</option>
+                                            <option value="group C">Group C</option>
+                                            <option value="group D">Group D</option>
+                                            <option value="group E">Group E</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="parental-edu">Parental Level of Education</label>
+                                        <select id="parental-edu" required>
+                                            <option value="" disabled selected>Select Education</option>
+                                            <option value="some high school">Some High School</option>
+                                            <option value="high school">High School</option>
+                                            <option value="some college">Some College</option>
+                                            <option value="associate's degree">Associate's Degree</option>
+                                            <option value="bachelor's degree">Bachelor's Degree</option>
+                                            <option value="master's degree">Master's Degree</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="lunch">Lunch Support Program</label>
+                                        <select id="lunch" required>
+                                            <option value="" disabled selected>Select Lunch Type</option>
+                                            <option value="standard">Standard Lunch</option>
+                                            <option value="free/reduced">Free/Reduced Lunch</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="test-prep">Test Preparation Course</label>
+                                        <select id="test-prep" required>
+                                            <option value="" disabled selected>Select Status</option>
+                                            <option value="none">None / Not Completed</option>
+                                            <option value="completed">Completed</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="behavior">Learning Engagement Level</label>
+                                        <select id="behavior" required>
+                                            <option value="" disabled selected>Select Engagement</option>
+                                            <option value="High Engagement">High Engagement (Active, Attentive)</option>
+                                            <option value="Moderate Engagement">Moderate Engagement (Consistent)</option>
+                                            <option value="Low Engagement">Low Engagement (Passive, Distracted)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Numeric Sliders -->
+                                    <div class="form-group col-span-2">
+                                        <div class="slider-header">
+                                            <label for="attendance">Attendance Rate</label>
+                                            <span class="slider-val" id="attendance-val">85%</span>
+                                        </div>
+                                        <input type="range" id="attendance" min="55" max="100" value="85" class="slider">
+                                        <div class="slider-labels">
+                                            <span>55% (High Risk)</span>
+                                            <span>75% (Threshold)</span>
+                                            <span>100%</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group col-span-2">
+                                        <div class="slider-header">
+                                            <label for="study-hours">Study Hours (Weekly)</label>
+                                            <span class="slider-val" id="study-hours-val">12 hours</span>
+                                        </div>
+                                        <input type="range" id="study-hours" min="2" max="30" value="12" class="slider">
+                                        <div class="slider-labels">
+                                            <span>2 hours</span>
+                                            <span>15 hours</span>
+                                            <span>30 hours</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-predict">
+                                    <span class="btn-text"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate AI Prediction</span>
+                                    <div class="loader" id="predict-loader"></div>
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Prediction Result Card -->
+                        <div class="glass-card result-card" id="prediction-result">
+                            <div class="result-placeholder" id="result-placeholder">
+                                <div class="placeholder-icon">
+                                    <i class="fa-solid fa-brain"></i>
+                                </div>
+                                <h4>Awaiting Input</h4>
+                                <p>Fill out the student profile parameters and click "Generate AI Prediction" to view the AI forecast, risk assessment, and recommended interventions.</p>
+                            </div>
+                            
+                            <div class="result-content hidden" id="result-content">
+                                <div class="card-header">
+                                    <h3><i class="fa-solid fa-chart-pie"></i> AI Analysis Report</h3>
+                                    <div class="risk-badge" id="risk-badge">Low Risk</div>
+                                </div>
+                                
+                                <!-- Scores Radial / Progress -->
+                                <div class="prediction-overview">
+                                    <div class="overall-gauge">
+                                        <div class="gauge-number" id="pred-avg-score">0</div>
+                                        <div class="gauge-label">Predicted Avg</div>
+                                    </div>
+                                    
+                                    <div class="score-bars">
+                                        <div class="score-bar-item">
+                                            <div class="bar-info">
+                                                <span>Math Score</span>
+                                                <strong id="pred-math-val">0/100</strong>
+                                            </div>
+                                            <div class="bar-track">
+                                                <div class="bar-fill math" id="pred-math-fill" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="score-bar-item">
+                                            <div class="bar-info">
+                                                <span>Reading Score</span>
+                                                <strong id="pred-reading-val">0/100</strong>
+                                            </div>
+                                            <div class="bar-track">
+                                                <div class="bar-fill reading" id="pred-reading-fill" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="score-bar-item">
+                                            <div class="bar-info">
+                                                <span>Writing Score</span>
+                                                <strong id="pred-writing-val">0/100</strong>
+                                            </div>
+                                            <div class="bar-track">
+                                                <div class="bar-fill writing" id="pred-writing-fill" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Probability Breakdown -->
+                                <div class="risk-probabilities">
+                                    <h4>Risk Classification Probabilities</h4>
+                                    <div class="prob-grid">
+                                        <div class="prob-item">
+                                            <span class="prob-name">High Risk</span>
+                                            <div class="prob-track">
+                                                <div class="prob-fill red" id="prob-high-fill" style="width: 0%"></div>
+                                            </div>
+                                            <span class="prob-val" id="prob-high-val">0%</span>
+                                        </div>
+                                        <div class="prob-item">
+                                            <span class="prob-name">Medium Risk</span>
+                                            <div class="prob-track">
+                                                <div class="prob-fill yellow" id="prob-med-fill" style="width: 0%"></div>
+                                            </div>
+                                            <span class="prob-val" id="prob-med-val">0%</span>
+                                        </div>
+                                        <div class="prob-item">
+                                            <span class="prob-name">Low Risk</span>
+                                            <div class="prob-track">
+                                                <div class="prob-fill green" id="prob-low-fill" style="width: 0%"></div>
+                                            </div>
+                                            <span class="prob-val" id="prob-low-val">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- AI Intervention Checklist -->
+                                <div class="ai-recommendations">
+                                    <h4><i class="fa-solid fa-circle-info"></i> Recommended Support Plan</h4>
+                                    <ul id="recommendation-list">
+                                        <!-- Will be dynamically populated -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3. Student Directory Tab -->
+                <div id="directory" class="tab-panel">
+                    <div class="glass-card directory-card">
+                        <div class="directory-toolbar">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="directory-search" placeholder="Search students by ID, gender, race...">
+                            </div>
+                            <div class="filter-group">
+                                <label for="filter-risk">Risk Category</label>
+                                <select id="filter-risk">
+                                    <option value="all">All Risk Levels</option>
+                                    <option value="High Risk">High Risk Only</option>
+                                    <option value="Medium Risk">Medium Risk Only</option>
+                                    <option value="Low Risk">Low Risk Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="students-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Gender</th>
+                                        <th>Parental Education</th>
+                                        <th>Attendance</th>
+                                        <th>Weekly Study</th>
+                                        <th>Engagement</th>
+                                        <th>Avg Grade</th>
+                                        <th>Academic Risk</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="students-table-body">
+                                    <!-- Dynamic rows -->
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4">Loading student records...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="directory-pagination">
+                            <span class="pagination-info" id="pagination-info">Showing 1-10 of 1000 students</span>
+                            <div class="pagination-buttons">
+                                <button class="btn btn-sm btn-secondary" id="btn-prev" disabled><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                                <button class="btn btn-sm btn-secondary" id="btn-next">Next <i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 4. AI Insights Tab -->
+                <div id="insights" class="tab-panel">
+                    <div class="insights-grid">
+                        <div class="glass-card insight-card">
+                            <div class="insight-badge primary">Key Predictor</div>
+                            <h3>The Attendance Threshold</h3>
+                            <p class="insight-text">Students with attendance <strong>below 75%</strong> have a <strong>91.4% higher probability</strong> of falling into the High Academic Risk category, regardless of demographic background or parental education.</p>
+                            <div class="insight-stat">
+                                <div class="stat-num text-red">< 75%</div>
+                                <div class="stat-desc">Attendance -> High Risk Zone</div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card insight-card">
+                            <div class="insight-badge success">Preparation Effect</div>
+                            <h3>Test Preparation Impact</h3>
+                            <p class="insight-text">Completing the test preparation course boosts math scores by an average of <strong>7.8 points</strong>, reading scores by <strong>7.3 points</strong>, and writing scores by <strong>9.9 points</strong>.</p>
+                            <div class="insight-stat">
+                                <div class="stat-num text-green">+8.3</div>
+                                <div class="stat-desc">Average Score Increase</div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card insight-card">
+                            <div class="insight-badge warning">Socioeconomic Factor</div>
+                            <h3>Lunch Support Correlation</h3>
+                            <p class="insight-text">Students receiving standard lunch scored higher across all subjects compared to those on free/reduced lunch, pointing to economic security as a major learning condition.</p>
+                            <div class="insight-stat">
+                                <div class="stat-num text-amber">11%</div>
+                                <div class="stat-desc">Performance Gap observed</div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card insight-card">
+                            <div class="insight-badge info">Study Habit Curve</div>
+                            <h3>Diminishing Returns on Study Hours</h3>
+                            <p class="insight-text">Predictive modeling shows a steep increase in average scores up to <strong>15 study hours/week</strong>. Beyond 20 hours/week, score improvement plateaus, suggesting quality of study is key.</p>
+                            <div class="insight-stat">
+                                <div class="stat-num text-blue">15 hrs</div>
+                                <div class="stat-desc">Optimal Study Duration</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ML Model Details -->
+                    <div class="glass-card model-details-card">
+                        <h3><i class="fa-solid fa-gears"></i> AI Predictor Configuration</h3>
+                        <div class="model-meta-grid">
+                            <div class="meta-item">
+                                <span>Algorithm</span>
+                                <strong>Random Forest Ensemble</strong>
+                            </div>
+                            <div class="meta-item">
+                                <span>Feature Columns Used</span>
+                                <strong>8 features (5 categorical, 3 numerical)</strong>
+                            </div>
+                            <div class="meta-item">
+                                <span>Pre-processing</span>
+                                <strong>One-Hot Encoding & StandardScaler Pipeline</strong>
+                            </div>
+                            <div class="meta-item">
+                                <span>Risk Evaluation Threshold</span>
+                                <strong>Score < 52 OR Attendance < 75%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </main>
+    </div>
+    
+    <!-- Edit Profile Modal -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-gear"></i> Edit Educator Profile</h3>
+                <button class="btn-close" id="btn-close-profile"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="profile-name-input">Educator Name</label>
+                    <input type="text" id="profile-name-input" placeholder="e.g. Dr. Devarsh" required>
+                </div>
+                <div class="form-group">
+                    <label for="profile-role-input">Role</label>
+                    <input type="text" id="profile-role-input" placeholder="e.g. Academic Director" required>
+                </div>
+                
+                <div class="profile-preview-container">
+                    <span>Live Preview:</span>
+                    <div class="user-profile preview">
+                        <div class="user-avatar" id="profile-preview-avatar">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name" id="profile-preview-name">-</span>
+                            <span class="user-role" id="profile-preview-role">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-profile">Cancel</button>
+                <button class="btn btn-primary" id="btn-save-profile">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
